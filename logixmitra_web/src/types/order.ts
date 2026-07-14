@@ -46,12 +46,27 @@
 
 
 // types/order.ts
-export type OrderStatus = 'Pending' | 'Shipped' | 'Delivered' | 'RTO' | 'Cancelled';
+export type OrderStatus =
+  | 'Pending'
+  | 'Shipped'
+  | 'Delivered'
+  | 'RTO'
+  | 'Cancelled'
+  | 'Draft Merged'
+  | 'Draft'
+  | 'Ready to Ship'
+  | 'In Transit'
+  | 'Out for Delivery'
+  | 'NDR'
+  | 'Lost'
+  | string;
+
 export type Platform = 'Manual' | 'Amazon' | 'Shopify' | 'WooCommerce' | 'Custom' | 'Merged';
 
 export interface OrderItem {
   id?: string;
   name: string;
+  sku?: string;
   unitPrice: number;
   quantity: number;
   gstRate: number; // in percentage
@@ -69,6 +84,8 @@ export interface Order {
   customerName: string;
   customerPhone: string;
   customerEmail?: string;
+  /** Legacy alias used by some integration mock data */
+  customer?: string;
   seller: string;
   courier: string;
   status: OrderStatus;
@@ -76,6 +93,7 @@ export interface Order {
   orderDate: string;
   awb: string;
   platform: Platform;
+  totalOutstanding?: number | string;
   
   // Address fields - separated
   pincode: string;
@@ -95,6 +113,7 @@ export interface Order {
   
   createdAt?: string;
   updatedAt?: string;
+  [key: string]: unknown;
 }
 
 export interface IntegrationConfig {
@@ -103,7 +122,8 @@ export interface IntegrationConfig {
   name: string;
   isActive: boolean;
   lastSync?: string;
-  credentials: Record<string, any>;
+  credentials: Record<string, unknown>;
+  [key: string]: unknown;
 }
 
 export interface SyncResult {
@@ -134,4 +154,4 @@ export interface CreateOrderDTO {
   items: Omit<OrderItem, 'id' | 'volumetricWeight' | 'totalPrice'>[];
 }
 
-export interface UpdateOrderDTO extends Partial<CreateOrderDTO> {}
+export type UpdateOrderDTO = Partial<CreateOrderDTO>;

@@ -7,6 +7,8 @@ interface StatCardProps {
   icon: ReactNode;
   change?: string;
   trend?: "up" | "down" | "neutral";
+  /** Optional visual variant accepted by callers; currently unused. */
+  variant?: string;
 }
 
 const StatCard = ({ title, value, icon, change, trend = "neutral" }: StatCardProps) => (

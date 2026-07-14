@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # LogixMitra
 
 Smart logistics management platform — orders, couriers, COD remittance, finance & reports.
@@ -28,10 +27,6 @@ tools\python312\python.exe logixmitra_backend\manage.py runserver 8000
 
 ### 2. Frontend (React)
 ```bat
-start-frontend.bat
-```
-Or manually:
-```bat
 cd logixmitra_web
 npm install
 npm run dev
@@ -59,8 +54,3 @@ npm run dev
 ```bat
 tools\python312\python.exe logixmitra_backend\manage.py seed_data
 ```
-=======
-"# logixmitra" 
-"# logixmitra" 
-"# logixmitra" 
->>>>>>> be0fdedaad8ecd46a6c0f1ae12cf604144f1fc05

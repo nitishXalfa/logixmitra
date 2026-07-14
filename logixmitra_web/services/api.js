@@ -161,7 +161,7 @@ class ApiService {
   // Permission endpoints
   async getPermissions(params = {}) {
     const queryParams = new URLSearchParams(params).toString();
-    return this.api.get(`/permissions${queryParams ? '?' + queryParams : ''}`);
+    return this.api.get(`/permissions/${queryParams ? '?' + queryParams : ''}`);
   }
 
   async getModules() {
@@ -180,7 +180,7 @@ class ApiService {
     return this.api.delete(`/permissions/${id}`);
   }
 
-  // User endpoints (to be implemented)
+  // User endpoints
   async createUser(data) {
     return this.api.post('/users', data);
   }
@@ -199,6 +199,27 @@ class ApiService {
 
   async resetUserPassword(id) {
     return this.api.post(`/users/${id}/reset-password`);
+  }
+
+  // Generic HTTP helpers used by pages
+  get(url, config) {
+    return this.api.get(url, config);
+  }
+
+  post(url, data, config) {
+    return this.api.post(url, data, config);
+  }
+
+  put(url, data, config) {
+    return this.api.put(url, data, config);
+  }
+
+  patch(url, data, config) {
+    return this.api.patch(url, data, config);
+  }
+
+  delete(url, config) {
+    return this.api.delete(url, config);
   }
 }
 

@@ -74,7 +74,11 @@ const platformColors: Record<Platform, string> = {
   Shopify: "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400",
   WooCommerce: "bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400",
   Custom: "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400",
+  Merged: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-400",
 };
+
+type FormItemErrors = { name?: string; unitPrice?: string; quantity?: string };
+type FormErrors = Record<string, string | FormItemErrors[] | undefined>;
 
 // const emptyOrderItem: Omit<OrderItem, 'id' | 'volumetricWeight' | 'totalPrice'> = {
 //   name: "",
@@ -188,7 +192,7 @@ const DEFAULT_INTEGRATIONS: IntegrationConfig[] = [
   }
 ];
 
-let warelistbyid={}
+const warelistbyid={}
 
 // Amazon Integration Setup Guide Component
 const AmazonSetupGuide = () => {
@@ -864,7 +868,7 @@ const FormFields = ({ formData, allsellerlist, setFormData, handleItemChange, ad
     return Number((subtotal + gstAmount).toFixed(2));
   };
 
-  const calculateChargeableWeight = (item: OrderItem): number => {
+  const calculateChargeableWeight = (item: Pick<OrderItem, 'height' | 'width' | 'length' | 'deadWeight'>): number => {
     const volumetric = calculateVolumetricWeight(item.height, item.width, item.length) || 0;
     const deadWeight = item.deadWeight || 0;
     return Math.max(volumetric, deadWeight);
@@ -1023,7 +1027,7 @@ const FormFields = ({ formData, allsellerlist, setFormData, handleItemChange, ad
                 }
 
                 let checkstat = false;
-                for (let x of pincodelist.Sheet1) {
+                for (const x of pincodelist.Sheet1) {
                   if (String(x.Pincode) === value) {
                     checkstat = true;
                     setFormData((f) => ({
@@ -1041,7 +1045,7 @@ const FormFields = ({ formData, allsellerlist, setFormData, handleItemChange, ad
 
                 if (!checkstat) {
                   try {
-                    let response = await getPincodeDetails(value);
+                    const response = await getPincodeDetails(value);
                     setFormData((f) => ({
                       ...f,
                       pincode: value,
@@ -1544,7 +1548,7 @@ const IntegrationConfigDialog = ({
 
   }
   catch(e){
-
+    return false;
   }
 
 
@@ -1610,6 +1614,7 @@ const IntegrationConfigDialog = ({
   };
 
   const renderConfigFields = () => {
+    const cred = (key: string): string => String(config.credentials[key] ?? '');
 
     // console.log(config,"configconfigconfigconfigconfigconfig")
 
@@ -1623,7 +1628,7 @@ const IntegrationConfigDialog = ({
               <Label htmlFor="sellerId">Client ID</Label>
               <Input 
                 id="sellerId"
-                value={config.credentials.sellerId || ''} 
+                value={cred('sellerId')} 
                 onChange={e => setConfig(c => ({ 
                   ...c!, 
                   credentials: { ...c!.credentials, sellerId: e.target.value }
@@ -1638,7 +1643,7 @@ const IntegrationConfigDialog = ({
               <Label htmlFor="marketplaceId">Client ID</Label>
               <Input 
                 id="marketplaceId"
-                value={config.credentials.marketplaceId || ''} 
+                value={cred('marketplaceId')} 
                 onChange={e => setConfig(c => ({ 
                   ...c!, 
                   credentials: { ...c!.credentials, marketplaceId: e.target.value }
@@ -1650,7 +1655,7 @@ const IntegrationConfigDialog = ({
               <Input 
                 id="accessToken"
                 type="password"
-                value={config.credentials.accessToken || ''} 
+                value={cred('accessToken')} 
                 onChange={e => setConfig(c => ({ 
                   ...c!, 
                   credentials: { ...c!.credentials, accessToken: e.target.value }
@@ -1685,7 +1690,7 @@ const IntegrationConfigDialog = ({
               <Label htmlFor="storeUrl">Shopify URL</Label>
               <Input 
                 id="storeUrlm"
-                value={config.credentials.storeUrl || ''} 
+                value={cred('storeUrl')} 
                 onChange={e => setConfig(c => ({ 
                   ...c!, 
                   credentials: { ...c!.credentials, storeUrl: e.target.value }
@@ -1700,7 +1705,7 @@ const IntegrationConfigDialog = ({
               <Label htmlFor="storeUrl">Client ID</Label>
               <Input 
                 id="storeUrl"
-                value={config.credentials.clientid || ''} 
+                value={cred('clientid')} 
                 onChange={e => setConfig(c => ({ 
                   ...c!, 
                   credentials: { ...c!.credentials, clientid: e.target.value }
@@ -1713,7 +1718,7 @@ const IntegrationConfigDialog = ({
               <Input 
                 id="accessToken"
                 type="password"
-                value={config.credentials.accessToken || ''} 
+                value={cred('accessToken')} 
                 onChange={e => setConfig(c => ({ 
                   ...c!, 
                   credentials: { ...c!.credentials, accessToken: e.target.value }
@@ -1746,7 +1751,7 @@ const IntegrationConfigDialog = ({
               <Label htmlFor="storeUrl">Store URL *</Label>
               <Input 
                 id="storeUrl"
-                value={config.credentials.storeUrl || ''} 
+                value={cred('storeUrl')} 
                 onChange={e => setConfig(c => ({ 
                   ...c!, 
                   credentials: { ...c!.credentials, storeUrl: e.target.value }
@@ -1758,7 +1763,7 @@ const IntegrationConfigDialog = ({
               <Label htmlFor="apiKey">Consumer Key *</Label>
               <Input 
                 id="apiKey"
-                value={config.credentials.apiKey || ''} 
+                value={cred('apiKey')} 
                 onChange={e => setConfig(c => ({ 
                   ...c!, 
                   credentials: { ...c!.credentials, apiKey: e.target.value }
@@ -1771,7 +1776,7 @@ const IntegrationConfigDialog = ({
               <Input 
                 id="apiSecret"
                 type="password"
-                value={config.credentials.apiSecret || ''} 
+                value={cred('apiSecret')} 
                 onChange={e => setConfig(c => ({ 
                   ...c!, 
                   credentials: { ...c!.credentials, apiSecret: e.target.value }
@@ -1789,7 +1794,7 @@ const IntegrationConfigDialog = ({
               <Label htmlFor="apiUrl">API URL *</Label>
               <Input 
                 id="apiUrl"
-                value={config.credentials.storeUrl || ''} 
+                value={cred('storeUrl')} 
                 onChange={e => setConfig(c => ({ 
                   ...c!, 
                   credentials: { ...c!.credentials, storeUrl: e.target.value }
@@ -1801,7 +1806,7 @@ const IntegrationConfigDialog = ({
               <Label htmlFor="apiKey">API Key</Label>
               <Input 
                 id="apiKey"
-                value={config.credentials.apiKey || ''} 
+                value={cred('apiKey')} 
                 onChange={e => setConfig(c => ({ 
                   ...c!, 
                   credentials: { ...c!.credentials, apiKey: e.target.value }
@@ -1814,7 +1819,7 @@ const IntegrationConfigDialog = ({
               <Input 
                 id="apiSecret"
                 type="password"
-                value={config.credentials.apiSecret || ''} 
+                value={cred('apiSecret')} 
                 onChange={e => setConfig(c => ({ 
                   ...c!, 
                   credentials: { ...c!.credentials, apiSecret: e.target.value }
@@ -1826,7 +1831,7 @@ const IntegrationConfigDialog = ({
               <Label htmlFor="webhookUrl">Webhook URL (optional)</Label>
               <Input 
                 id="webhookUrl"
-                value={config.credentials.webhookUrl || ''} 
+                value={cred('webhookUrl')} 
                 onChange={e => setConfig(c => ({ 
                   ...c!, 
                   credentials: { ...c!.credentials, webhookUrl: e.target.value }
@@ -1962,11 +1967,11 @@ const [formErrors, setFormErrors] = useState<any>({});
   const [integrations, setIntegrations] = useState<IntegrationConfig[]>(DEFAULT_INTEGRATIONS);
   const [loadingIntegrations, setLoadingIntegrations] = useState(true);
   const [rendertmp, setrendertmp] = useState(true);
-  let [bulkshipmentcreate, setbulkshipmentcreate] = useState({coureir:[],orderlist:[],id:[],ratelist:{},warehouselist:[],dispatchdate:{},zone:[]});
+  const [bulkshipmentcreate, setbulkshipmentcreate] = useState({coureir:[],orderlist:[],id:[],ratelist:{},warehouselist:[],dispatchdate:{},zone:[]});
   const [allsellerlist, setallsellerlist] = useState([]);
   const [allsellerlistid, setallsellerlistid] = useState({});
 
-  let [ratelist, setratelist] = useState({});
+  const [ratelist, setratelist] = useState({});
 
 bulkshipmentcreate.ratelist={...ratelist}
 const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
@@ -1980,7 +1985,7 @@ const [trackorderdata, settrackorderdata] = useState([]);
 
 
 
-  let [rawData,setrawData]=useState([])
+  const [rawData,setrawData]=useState([])
  
 const northEastStates = [
   "arunachal pradesh",
@@ -2025,7 +2030,7 @@ const northEastStates = [
 
 
 const getWarehouses = async () => {
-  let response =await apiRequest("GET","auth/getAllWarehouses",{},{})
+  const response =await apiRequest("GET","auth/getAllWarehouses",{},{})
   response.data.data.map((val)=>{
 warelistbyid[val.id]=val
   })
@@ -2049,10 +2054,10 @@ warelistbyid[val.id]=val
       // Ensure data is an array
       if (Array.isArray(data.data)) {
         try{
-        let tmpstore=[]
-for(let x of DEFAULT_INTEGRATIONS){
+        const tmpstore=[]
+for(const x of DEFAULT_INTEGRATIONS){
   let check=false
-  for(let y of data.data){
+  for(const y of data.data){
     if(x?.name==y?.name && y?.user_id==getuserid()){
       check=true
       tmpstore.push(y)
@@ -2109,7 +2114,7 @@ catch(e){
       const pagination = result.pagination;
       const data2 = await sellerApi.getAll();
       storetmpdata.ordernumber = [];
-      for (let x of data) {
+      for (const x of data) {
         storetmpdata.ordernumber.push(x.orderNumber);
       }
 
@@ -2124,8 +2129,8 @@ catch(e){
         setTotalOrdersCount(data.length);
         setServerTotalPages(Math.ceil(data.length / limit) || 1);
       }
-      let temp = {};
-      for (let x of data2 || []) {
+      const temp = {};
+      for (const x of data2 || []) {
         temp[x.id] = x;
       }
       setallsellerlistid(temp);
@@ -2376,7 +2381,7 @@ const handleCreate = async () => {
       return sum + total;
     }, 0);
 
-    let orderData = {
+    const orderData = {
       ...formData,
       amount: `₹${totalAmount.toFixed(2)}`,
       items: formData.items.map(item => ({
@@ -2468,7 +2473,7 @@ const handleUpdate = async () => {
       return sum + total;
     }, 0);
 
-    let orderData = {
+    const orderData = {
       ...formData,
       amount: `₹${totalAmount.toFixed(2)}`,
       items: formData.items.map(item => ({
@@ -2516,7 +2521,7 @@ const handleUpdate = async () => {
   const handleDispute = async () => {
     if (!disputeOrder) return;
     try {
-      let payload={
+      const payload={
 
 dispute_status:"Disputed",
 dispute_file_:proof,
@@ -2529,7 +2534,7 @@ previousweight:sessionStorage.getItem("previousweight"),
 
 }
 
-let response=await apiRequest("POST","orders/dispute_order",payload,{})
+const response=await apiRequest("POST","orders/dispute_order",payload,{})
 
       if(response.status==200){
       setdisputeOrder(null);
@@ -2936,7 +2941,7 @@ console.log(courier__,"courier__courier__courier__courier__   ")
   const handleTestConnection = async (platform: Platform, credentials: any): Promise<boolean> => {
     try {
       const result = await integrationApi.testConnection(platform, credentials);
-      return result.success;
+      return result;
     } catch (error) {
       console.error("Test connection failed:", error);
       return false;
@@ -2954,10 +2959,10 @@ console.log(courier__,"courier__courier__courier__courier__   ")
       if (existingIntegration && existingIntegration.id !== 'amazon-1' && existingIntegration.id !== 'shopify-1' && 
           existingIntegration.id !== 'woo-1' && existingIntegration.id !== 'custom-1') {
         // Update existing integration
-        savedIntegration = await integrationApi.update(updatedConfig.id, updatedConfig);
+        savedIntegration = await integrationApi.update(updatedConfig.id, updatedConfig as unknown as Record<string, unknown>);
       } else {
         // Create new integration
-        savedIntegration = await integrationApi.create(updatedConfig);
+        savedIntegration = await integrationApi.create(updatedConfig as unknown as Record<string, unknown>);
       }
       
       setrendertmp(!rendertmp)
@@ -2990,7 +2995,7 @@ console.log(courier__,"courier__courier__courier__courier__   ")
   };
 
   async function createshipmentfuntion(){
-    let response=await orderApi.bulkshipmentcreate(bulkshipmentcreate)
+    const response=await orderApi.bulkshipmentcreate(bulkshipmentcreate)
     alert(response.message)
     setrendertmp(!rendertmp)
 
@@ -3004,7 +3009,7 @@ console.log(courier__,"courier__courier__courier__courier__   ")
 
   async function Shippmentcancel(order_){
 
- let response=await orderApi.Shippmentcancel(order_.orderNumber,order_.seller)
+ const response=await orderApi.Shippmentcancel(order_.orderNumber,order_.seller)
     alert(response?.message)
     setrendertmp(!rendertmp)
     fetchOrders()
@@ -3220,7 +3225,7 @@ function convertOrderToShipment2(order, originPincode = "") {
 
 
     try {
-     let pincodefrom=warehouselist.find((ware)=>ware.id==wareid || (wareid=="" && orderdata.warehouse) || (wareid=="" && ware.isDefault)) ||{}
+     const pincodefrom=warehouselist.find((ware)=>ware.id==wareid || (wareid=="" && orderdata.warehouse) || (wareid=="" && ware.isDefault)) ||{}
     // let pincodefrom=warehouselist.find((ware)=>ware.id== orderdata.warehouse) ||{}
     console.log(pincodefrom,"pincodefrompincodefrompincodefrompincodefrompincodefrompincodefrom")
 
@@ -3230,7 +3235,7 @@ function convertOrderToShipment2(order, originPincode = "") {
 
      console.log(pincodefrom)
 
-    let hwl={
+    const hwl={
       height:0,
       width:0,
       length:0,
@@ -3252,8 +3257,8 @@ function convertOrderToShipment2(order, originPincode = "") {
 
 
  
-      let pin1 =  {}
-      let pin2 ={}
+      const pin1 =  {}
+      const pin2 ={}
 
   //         for(let x of pincodelist.Sheet1){
   //           if(x.Pincode.includes(pincodefrom)){
@@ -3280,14 +3285,14 @@ function convertOrderToShipment2(order, originPincode = "") {
   // console.log(pincodefrom?.city?.toLowerCase(),"gautam buddha nagar")
 
     let zone=""
-      let response1={
+      const response1={
         city: pincodefrom?.city?.toLowerCase()=="gautam buddha nagar"?"noida" :pincodefrom?.state?.toLowerCase()=="delhi"?"delhi":pincodefrom?.city?.trim()?.toLowerCase()||"",
         district:pincodefrom?.city?.toLowerCase()=="gautam buddha nagar"?"noida" :pincodefrom?.state?.toLowerCase()=="delhi"?"delhi":pincodefrom?.city?.trim()?.toLowerCase()||"" ,
         state:pincodefrom?.state?.trim()?.toLowerCase()||""  ,
       }
 
       
-       let response2={ 
+       const response2={ 
         city:orderdata?.city?.toLowerCase()=="gautam buddha nagar"?"noida" :orderdata?.state?.toLowerCase()=="delhi"?"delhi":orderdata.city?.trim()?.toLowerCase()||"",
         district:orderdata?.city?.toLowerCase()=="gautam buddha nagar"?"noida" :orderdata?.state?.toLowerCase()=="delhi"?"delhi":orderdata.city?.trim()?.toLowerCase()||"",
         state:orderdata.state?.trim()?.toLowerCase()||"",
@@ -3297,7 +3302,7 @@ function convertOrderToShipment2(order, originPincode = "") {
 
 
 
-      let response3=await fetch(`${UPLOAD_BASE_URL}/read-excel`,{
+      const response3Res = await fetch(`${UPLOAD_BASE_URL}/read-excel`,{
         method:"POST",
         headers:{
           "Content-Type":"application/json",
@@ -3305,7 +3310,7 @@ function convertOrderToShipment2(order, originPincode = "") {
         },
         body:JSON.stringify({pin1:response1,pin2:response2})
       })
-      response3=await response3.json()
+      const response3 = await response3Res.json() as { data?: string }
 
 
        zone=response3.data
@@ -3370,18 +3375,18 @@ function convertOrderToShipment2(order, originPincode = "") {
 
 
       
-      let wieght=valometric>tmpweight?valometric:tmpweight //calculateVolumetricWeight(hwl.height,hwl.width,hwl.length)
+      const wieght=valometric>tmpweight?valometric:tmpweight //calculateVolumetricWeight(hwl.height,hwl.width,hwl.length)
       // console.log(wieght,"wieghtsakdlkdslalsdkladsk",valometric>tmpweight?valometric:tmpweight)
      
-      let couriertype={
+      const couriertype={
 
       }
-    let alldata={
+    const alldata={
         type:[],
         rate:[],
         data:[],
       }
-      let tmp=""
+      const tmp=""
       const response___ = await fetch(`${API_BASE_URL}/users/${pincodefrom.user_id}`,{
           method: "GET",
           headers: {
@@ -3394,10 +3399,10 @@ function convertOrderToShipment2(order, originPincode = "") {
 
         
         // setrawData(data?.data?.ratechart ||[])
-        rawData=data?.data?.ratechart ||[]
-        let rawData_=rawData.slice(2)
+        const ratechartData = data?.data?.ratechart || []
+        const rawData_=ratechartData.slice(2)
        
-        let alltype=[]
+        const alltype=[]
 
          for(let i=0;i<rawData_.length;i++)
             {
@@ -3427,7 +3432,7 @@ function convertOrderToShipment2(order, originPincode = "") {
                 for(let j=0;j<rawData_.length;j++)
                  { 
                     
-                    let tmax=Number(rawData_[j][1].replaceAll(" ","").replace("Per","").replace("kg","").replace("additional","") || 0)
+                    const tmax=Number(rawData_[j][1].replaceAll(" ","").replace("Per","").replace("kg","").replace("additional","") || 0)
                     
                      if(rawData_[j][0]==alltype[i] && wieght<=tmax && ind2==-1){
                        ind2=j
@@ -3481,7 +3486,7 @@ function convertOrderToShipment2(order, originPincode = "") {
 
 
 
-       let amountNum = parseFloat(orderdata.amount.replace(/[^0-9.-]/g, ''));
+       const amountNum = parseFloat(orderdata.amount.replace(/[^0-9.-]/g, ''));
   let charge=0
               
  
@@ -3497,13 +3502,15 @@ function convertOrderToShipment2(order, originPincode = "") {
           let tmpcharg1=0   
           let tmpcharg2=0  
           try{
-          let x11= rawData_[ind].at(-1).replaceAll(" ","").replaceAll("%","").split("|")
+          const x11= rawData_[ind].at(-1).replaceAll(" ","").replaceAll("%","").split("|")
           tmpcharg1=amountNum/100*parseFloat(x11[1])
           tmpcharg2=parseFloat(x11[0]) 
 
            charge +=tmpcharg1>tmpcharg2?tmpcharg1:tmpcharg2
             console.log("mmmmmmmmmmmm",charge,amountNum,tmpcharg1,tmpcharg2 , orderdata.courier==alltype[i])  
-            orderdata.courier==alltype[i] &&   rtocharge.push({orderNumber:orderdata.orderNumber,charge:tmpcharg1>tmpcharg2?tmpcharg1:tmpcharg2,totalrate:rawData_[ind][rawData[0].indexOf(zone)]})
+            if (orderdata.courier==alltype[i]) {
+              rtocharge.push({orderNumber:orderdata.orderNumber,charge:tmpcharg1>tmpcharg2?tmpcharg1:tmpcharg2,totalrate:rawData_[ind][rawData[0].indexOf(zone)]})
+            }
           
              
           }
@@ -3513,7 +3520,9 @@ function convertOrderToShipment2(order, originPincode = "") {
           }
         }
         else{
-            orderdata.courier==alltype[i] &&   rtocharge.push({orderNumber:orderdata.orderNumber,charge:0,totalrate:rawData_[ind][rawData[0].indexOf(zone)]})
+            if (orderdata.courier==alltype[i]) {
+              rtocharge.push({orderNumber:orderdata.orderNumber,charge:0,totalrate:rawData_[ind][rawData[0].indexOf(zone)]})
+            }
 
         }
         charge=charge*1.18
@@ -3532,8 +3541,8 @@ function convertOrderToShipment2(order, originPincode = "") {
    
                         // console.log(rawData_,max,wieght,">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",ind)
 
-                   let amount1=Number(rawData_[ind][rawData[0].indexOf(zone)])
-                    let amount2=Number(rawData_[ind+1][rawData[0].indexOf(zone)])
+                   const amount1=Number(rawData_[ind][rawData[0].indexOf(zone)])
+                    const amount2=Number(rawData_[ind+1][rawData[0].indexOf(zone)])
                     let totalrate=amount1+amount2 
                     max+=Number(rawData_[ind+1][1].replaceAll(" ","").replace("Per","").replace("kg","").replace("additional","") || 0) 
                     do{
@@ -3542,7 +3551,7 @@ function convertOrderToShipment2(order, originPincode = "") {
                         alldata.type.push(alltype[i])
 
 
-  let amountNum = parseFloat(orderdata.amount.replace(/[^0-9.-]/g, ''));
+  const amountNum = parseFloat(orderdata.amount.replace(/[^0-9.-]/g, ''));
   let charge=0
               
  
@@ -3558,7 +3567,7 @@ function convertOrderToShipment2(order, originPincode = "") {
           let tmpcharg1=0   
           let tmpcharg2=0  
           try{
-          let x11= rawData_[ind].at(-1).replaceAll(" ","").replaceAll("%","").split("|")
+          const x11= rawData_[ind].at(-1).replaceAll(" ","").replaceAll("%","").split("|")
           tmpcharg1=amountNum/100*parseFloat(x11[1])
           tmpcharg2=parseFloat(x11[0]) 
 
@@ -3566,7 +3575,9 @@ function convertOrderToShipment2(order, originPincode = "") {
 
 
 
-       orderdata.courier==alltype[i] &&   rtocharge.push({orderNumber:orderdata.orderNumber,charge:tmpcharg1>tmpcharg2?tmpcharg1:tmpcharg2,totalrate:totalrate})
+       if (orderdata.courier==alltype[i]) {
+         rtocharge.push({orderNumber:orderdata.orderNumber,charge:tmpcharg1>tmpcharg2?tmpcharg1:tmpcharg2,totalrate:totalrate})
+       }
             //  console.log("mmmmmmmmmmmm",orderdata.courier,alltype[i])  
           
              
@@ -3577,7 +3588,9 @@ function convertOrderToShipment2(order, originPincode = "") {
           }
         }
         else{
-          orderdata.courier==alltype[i] && rtocharge.push({orderNumber:orderdata.orderNumber,charge:0,totalrate:totalrate})
+          if (orderdata.courier==alltype[i]) {
+            rtocharge.push({orderNumber:orderdata.orderNumber,charge:0,totalrate:totalrate})
+          }
 
         }
         charge=charge*1.18
@@ -3592,7 +3605,7 @@ function convertOrderToShipment2(order, originPincode = "") {
                       }
                       max+=Number(rawData_[ind+1][1].replaceAll(" ","").replace("Per","").replace("kg","").replace("additional","") || 0)
                       totalrate+=amount2 
-                      }while(1);
+                      } while (true); // eslint-disable-line no-constant-condition
                       }
                   }
 
@@ -3727,24 +3740,24 @@ function convertOrderToShipment2(order, originPincode = "") {
 
 
 async function getrtocharge(){
-  let rtood=[]
+  const rtood=[]
   
-  for(let x of sortedOrders){
+  for(const x of sortedOrders){
     if(x.status.toLowerCase().includes("rto")){
       rtood.push(x.orderNumber)
 
        await handleCalculate(x)
     }
   }
-  let rtood2=[]
+  const rtood2=[]
 
-     for(let x of rtocharge){
+     for(const x of rtocharge){
       
       rtood2.push(x.orderNumber)
      }
   
 
-  for(let x of rtood){
+  for(const x of rtood){
     if(!rtood2.includes(x)){
     // console.log(x,"xorderNumberxorderNumberxorderNumber")
     }
@@ -3766,7 +3779,7 @@ async function getrtocharge(){
 const funsettype=(y,response2)=>{
    let rrr=response2.rate[0]||0
         bulkshipmentcreate.coureir[y]=0
-        for(let y1  in response2?.rate){
+        for(const y1  in response2?.rate){
           if(response2?.rate[y1]<rrr){
             rrr=response2?.rate[y1]
             bulkshipmentcreate.coureir[y]=Number(y1)
@@ -3776,7 +3789,7 @@ const funsettype=(y,response2)=>{
 
 
 
-  let fungetratelist=async()=>{
+  const fungetratelist=async()=>{
     try{
     const response = await fetch(`${API_BASE_URL}/users/${getuser().id}`,{
         method: "GET",
@@ -3786,13 +3799,13 @@ const funsettype=(y,response2)=>{
         }
       });
       const data = await response.json();
-      let pincode=data.data.pincode
-    let pincodefrom=warehouselist.find((ware)=>ware.isDefault) || {}
+      const pincode=data.data.pincode
+    const pincodefrom=warehouselist.find((ware)=>ware.isDefault) || {}
 
-     for(let y in bulkshipmentcreate.orderlist){
-      let x=bulkshipmentcreate.orderlist[y]
+     for(const y in bulkshipmentcreate.orderlist){
+      const x=bulkshipmentcreate.orderlist[y]
 
-        let response2=await  handleCalculate(x,pincodefrom.id)
+        const response2=await  handleCalculate(x,pincodefrom.id)
         bulkshipmentcreate.warehouselist[y]=pincodefrom.id
         bulkshipmentcreate.zone[y]=tmpzone
         
@@ -3813,14 +3826,14 @@ const funsettype=(y,response2)=>{
 
   
 const uploaddcoument=async(e)=>{
-  let formdata=new FormData()
+  const formdata=new FormData()
   formdata.append("file",e.target.files[0])
 
-let response=await fetch(`${UPLOAD_BASE_URL}/upload`,{
+const uploadRes = await fetch(`${UPLOAD_BASE_URL}/upload`,{
   method:"POST",
   body:formdata
 })
-response=await response.json()
+const response = await uploadRes.json() as { fileInfo?: { filename?: string } }
 setproof(response?.fileInfo?.filename || "")
 e.target.value=""
 }
@@ -3831,8 +3844,8 @@ const checkmerge=()=>{
   return false
  }
  let match=true
- let statusx=bulkshipmentcreate.orderlist[0].status
- let customerdetails={
+ const statusx=bulkshipmentcreate.orderlist[0].status
+ const customerdetails={
   name:bulkshipmentcreate.orderlist[0].customerName?.toLowerCase(),
   phone:bulkshipmentcreate.orderlist[0].customerPhone,
   pincode:bulkshipmentcreate.orderlist[0].pincode,
@@ -3848,8 +3861,8 @@ const checkmerge=()=>{
     return true
   }
   let match=false
-  let arrrr=(add1.length>=add2.length?add1:add2)
-  for(let x of (add1.length<=add2.length?add1:add2)){
+  const arrrr=(add1.length>=add2.length?add1:add2)
+  for(const x of (add1.length<=add2.length?add1:add2)){
     if(!arrrr.includes(x)){
       match=true
       break
@@ -3857,7 +3870,7 @@ const checkmerge=()=>{
 
   }
  }
-for(let x of bulkshipmentcreate.orderlist){
+for(const x of bulkshipmentcreate.orderlist){
 if(statusx!=x.status || customerdetails.name!=x.customerName.toLowerCase() || customerdetails.phone!=x.customerPhone || customerdetails.pincode!=x.pincode || customerdetails.financialStatus!=x.financialStatus || checkaddress(customerdetails.address,x.addressLine1)){
   match=false
   break
@@ -3949,7 +3962,7 @@ function mergeOrders(orders) {
 
  const handleCreateMerge = async () => {
 try{
-  let orderdata=mergeOrders(bulkshipmentcreate.orderlist)
+  const orderdata=mergeOrders(bulkshipmentcreate.orderlist)
     
       const newOrder = await orderApi.mergecreate([orderdata]);
     fetchOrders()
@@ -4252,7 +4265,7 @@ const handleDownloadTemplate = () => {
   // Sample data rows (can be removed by user)
 
 
-  let datetmp=new Date()
+  const datetmp=new Date()
 
   datetmp.setDate(datetmp.getDate()+2)
   const sampleRows = [
@@ -4327,12 +4340,12 @@ const handleDownloadTemplate = () => {
 
 
 const getdefaultdata= async (warehouseid,orderNumber) => {
-  let response =await apiRequest("GET","auth/getAllWarehouses",{},{})
+  const response =await apiRequest("GET","auth/getAllWarehouses",{},{})
   // let response2 =await apiRequest("GET","wallets",{},{})
 
 
   // console.log(response,response2,"saklaskdlasmdnadsmnsadm")
-let warehouse=response.data.data.find((val)=>val.id==warehouseid)
+const warehouse=response.data.data.find((val)=>val.id==warehouseid)
 
 delete warehouse.seller
 
@@ -4423,7 +4436,7 @@ const generateBarcodeDataURL = async (text, width = 2.5, height = 50) => {
 
 // Also update the user 11 specific label function if needed:
 
-async function buildShippingLabel11(order) {
+async function buildShippingLabel11Large(order) {
   const defaultdata = await getdefaultdata(order.warehouse, order.orderNumber);
 
   // Generate barcodes with larger dimensions
@@ -4449,7 +4462,7 @@ async function buildShippingLabel11(order) {
     minute: "2-digit"
   });
 
-  const tableBody = [
+  const tableBody: any[] = [
     [
       { text: "SKU", bold: true, fontSize: 8, alignment: "center", fillColor: "#eef2ff", margin: [3, 5, 3, 5] },
       { text: "Name", bold: true, fontSize: 8, alignment: "center", fillColor: "#eef2ff", margin: [3, 5, 3, 5] },
@@ -4670,7 +4683,7 @@ async function generateShippingLabel11(order) {
     minute: "2-digit"
   });
 
-  const tableBody = [
+  const tableBody: any[] = [
     [
       {
         text: "SKU",
@@ -4952,7 +4965,7 @@ async function generateShippingLabel11(order) {
 // ----- Main label generation function -----
 
 async function generateShippingLabel19(order) {
-  let defaultdata = await getdefaultdata(order.warehouse, order.orderNumber);
+  const defaultdata = await getdefaultdata(order.warehouse, order.orderNumber);
 
   // Generate barcodes
   const awbBarcode = await generateBarcodeDataURL(order.awb);
@@ -4978,7 +4991,7 @@ async function generateShippingLabel19(order) {
   ].filter(Boolean);
 
   // Dimensions & Weight
-  let dims = {
+  const dims = {
     length: 10,
     width: 10,
     height: 10
@@ -5364,7 +5377,7 @@ async function generateShippingLabel19(order) {
 
 
 async function generateShippingLabeldefault(order) {
-  let defaultdata = await getdefaultdata(order.warehouse, order.orderNumber);
+  const defaultdata = await getdefaultdata(order.warehouse, order.orderNumber);
 
   // Generate barcodes
   const awbBarcode = await generateBarcodeDataURL(order.awb);
@@ -5390,7 +5403,7 @@ async function generateShippingLabeldefault(order) {
   ].filter(Boolean);
 
   // Dimensions & Weight
-  let dims = {
+  const dims = {
     length: 10,
     width: 10,
     height: 10
@@ -5794,7 +5807,7 @@ async function generateShippingLabel(order){
 
 
 async function generateOrderPDF(order) {
-  let defaultdata = await getdefaultdata(order.warehouse, order.orderNumber);
+  const defaultdata = await getdefaultdata(order.warehouse, order.orderNumber);
 
   const qrDataUrl = await generateAWBQRCode(order.awb || 'N/A');
   const logoo = await getBrandLogoBase64();
@@ -5972,14 +5985,12 @@ async function generateOrderPDF(order) {
 
 
 async function generateOrderPDFbulk(orderList) {
-  const pdfMake = window.pdfMake;
-
   const allContent = [];
 
   for (let index = 0; index < orderList.length; index++) {
     const order = orderList[index];
 
-    let defaultdata = await getdefaultdata(
+    const defaultdata = await getdefaultdata(
       order.warehouse,
       order.orderNumber
     );
@@ -6722,7 +6733,7 @@ async function buildShippingLabelDefault(order) {
     order.pincode || ""
   ].filter(Boolean);
 
-  let dims = {
+  const dims = {
     length: 10,
     width: 10,
     height: 10
@@ -7057,7 +7068,7 @@ async function buildShippingLabel19(order) {
     order.pincode || ""
   ].filter(Boolean);
 
-  let dims = {
+  const dims = {
     length: 10,
     width: 10,
     height: 10
@@ -7412,7 +7423,7 @@ async function buildShippingLabel11(order) {
     minute: "2-digit"
   });
 
-  const tableBody = [
+  const tableBody: any[] = [
     [
       { text: "SKU", bold: true, fontSize: 6, alignment: "center" },
       { text: "Name", bold: true, fontSize: 6, alignment: "center" },
@@ -7656,7 +7667,7 @@ async function generateBulkShippingLabels(orderList) {
 
 const cloneorder=async(order)=>{
   try {
-    let tmporder={...order}
+    const tmporder={...order}
     delete tmporder.id
 let ttt=0
     orders.forEach((element) => {
@@ -7697,7 +7708,7 @@ const trackorder=async(awb)=>{
       });
       return
     }
-    let response =await apiRequest("GET","tracking/track/"+awb,{},{})
+    const response =await apiRequest("GET","tracking/track/"+awb,{},{})
     // console.log(response,"trackingresponse")
     
    settrackorderdata(response?.data?.data || {})
@@ -7794,7 +7805,7 @@ const TrackingModal = ({ open, onOpenChange, trackingData }) => {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Status</p>
-              <Badge variant={getStatusBadgeColor(status)}>{status || '—'}</Badge>
+              <Badge variant={getStatusBadgeColor(status) as "default" | "destructive" | "outline" | "secondary"}>{status || '—'}</Badge>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">From</p>
@@ -8029,21 +8040,20 @@ const TrackingModal = ({ open, onOpenChange, trackingData }) => {
         <div className="space-y-2">
           
           <Button variant="outline" className=" mx-2 " onClick={async(e)=>{
-e.target.style.cursor="wait"
-            await fungetratelist()
-                setbulkcreatemodal(true)
-e.target.style.cursor="pointer"
-
+            (e.currentTarget as any).style.cursor="wait";
+            await fungetratelist();
+            setbulkcreatemodal(true);
+            (e.currentTarget as any).style.cursor="pointer";
           }}>
             Assign Courier
           </Button>
 
           <Button variant="outline" onClick={async(e)=>{
-            e.target.style.cursor="wait"
-                   await generateBulkShippingLabels(
-  bulkshipmentcreate.orderlist
-);
-            e.target.style.cursor="pointer"
+            (e.currentTarget as any).style.cursor="wait";
+            await generateBulkShippingLabels(
+              bulkshipmentcreate.orderlist
+            );
+            (e.currentTarget as any).style.cursor="pointer";
           }}
           
           >
@@ -8056,9 +8066,9 @@ e.target.style.cursor="pointer"
           className=" mx-2 "
 
           onClick={async(e)=>{
-            e.target.style.cursor="wait"
-                                await generateOrderPDFbulk(bulkshipmentcreate.orderlist)
-            e.target.style.cursor="pointer" 
+            (e.currentTarget as any).style.cursor="wait";
+            await generateOrderPDFbulk(bulkshipmentcreate.orderlist);
+            (e.currentTarget as any).style.cursor="pointer";
           }}>
             Bulk Invoice Download
           </Button>
@@ -8287,7 +8297,7 @@ e.target.style.cursor="pointer"
                         <tr><td colSpan={4} className="px-4 py-2 text-right font-medium">Total:</td><td className="px-4 py-2 text-right font-medium">
                           {
                           // viewOrder.items.reduce((acc, item) => acc + (item.totalPrice+(item.totalPrice/100*item.gstRate)), 0)
-                          viewOrder?.totalOutstanding>viewOrder.items.reduce((acc, item) => acc + ((item.unitPrice*item.quantity)+((item.quantity*item.unitPrice)/100*item.gstRate)), 0)?viewOrder?.totalOutstanding:viewOrder.items.reduce((acc, item) => acc + ((item.unitPrice*item.quantity)+((item.quantity*item.unitPrice)/100*item.gstRate)), 0)
+                          Number(viewOrder?.totalOutstanding ?? 0)>viewOrder.items.reduce((acc, item) => acc + ((item.unitPrice*item.quantity)+((item.quantity*item.unitPrice)/100*item.gstRate)), 0)?viewOrder?.totalOutstanding:viewOrder.items.reduce((acc, item) => acc + ((item.unitPrice*item.quantity)+((item.quantity*item.unitPrice)/100*item.gstRate)), 0)
                           }</td>
                           <td colSpan={2}></td></tr></tfoot></table></div></div>
               <div className="grid grid-cols-3 gap-4"><div><p className="text-xs text-muted-foreground">Seller</p><p className="font-medium">{ allsellerlistid[viewOrder.seller].name}</p></div><div><p className="text-xs text-muted-foreground">Courier</p><p className="font-medium">{viewOrder.courier}</p></div><div><p className="text-xs text-muted-foreground">AWB</p><p className="font-medium">{viewOrder.awb}</p></div><div><p className="text-xs text-muted-foreground">Platform</p><Badge className={platformColors[viewOrder.platform]}>{viewOrder.platform}</Badge></div><div><p className="text-xs text-muted-foreground">Status</p><Badge className={statusStyles[viewOrder.status]}>{viewOrder.status}</Badge></div></div>
@@ -8320,19 +8330,11 @@ setbulkshipmentcreate({coureir:[],orderlist:[],id:[],ratelist:{},warehouselist:[
             
             
                  <Button onClick={async (e) =>{ 
-                  e.target.style.display="none"
-                  // e.target.style.pointerEvents="none"
+                  (e.currentTarget as any).style.display="none";
 
+                  await createshipmentfuntion();
 
-
-                  await createshipmentfuntion()
-
-
-                  // e.target.style.pointerEvents="auto"
-                  e.target.style.display=""
-
-
-
+                  (e.currentTarget as any).style.display="";
 
                  }
                 } className="gap-2 mt-4 flex-end "><Plus className=" h-4 w-4" /> Ship Now</Button>
@@ -8345,8 +8347,8 @@ setbulkshipmentcreate({coureir:[],orderlist:[],id:[],ratelist:{},warehouselist:[
           <table className="w-full">
                 <thead>      
                   <tr className="border-b border-border">
-                    {[<> &nbsp; &nbsp; Order ID </>,"Description", "Platform", "Destination", "Amount", "Date","Zone","warehouse","Actions"].map((h) => (
-                      <th key={h} className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{h}</th>
+                    {[<> &nbsp; &nbsp; Order ID </>,"Description", "Platform", "Destination", "Amount", "Date","Zone","warehouse","Actions"].map((h, i) => (
+                      <th key={i} className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">{h}</th>
                     ))}
                   </tr>
                 </thead> 
@@ -8369,7 +8371,7 @@ setbulkshipmentcreate({coureir:[],orderlist:[],id:[],ratelist:{},warehouselist:[
                           {order.orderNumber}  
                             
                             </td>
-                        <td className="py-3 px-4"><div className="text-sm">{[...order?.items?.map((val)=>val.name)].join(", ")}</div></td>
+                        <td className="py-3 px-4"><div className="text-sm">{(order?.items ?? []).map((val)=>val.name).join(", ")}</div></td>
 
                         <td className="py-3 px-4"><Badge className={platformColors[order.platform]}><PlatformIcon className="h-3 w-3 mr-1" />{order.platform}</Badge></td>
                         <td className="py-3 px-4"><div className="text-sm">{order.city}, {order.pincode}</div></td>
@@ -8394,7 +8396,7 @@ setbulkshipmentcreate({coureir:[],orderlist:[],id:[],ratelist:{},warehouselist:[
                            bulkshipmentcreate.warehouselist[iii]=v
 
                           //  let tmpp=warehouselist.find((vall)=>vall.id==v)
-                         let response22=await handleCalculate(order,v)
+                         const response22=await handleCalculate(order,v)
                            bulkshipmentcreate.zone[iii]=tmpzone
 
                               await  funsettype(iii,response22)

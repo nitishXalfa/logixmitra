@@ -484,14 +484,14 @@ class ShopifyConnector {
     }
     
     // Format store URLhttps://gbnr1t-h1.myshopify.com
-    let storeUrl = this.config.credentials.storeUrl.replace("https://", '').replace(".myshopify.com","").replace("/","");
+    const storeUrl = String(this.config.credentials.storeUrl ?? '').replace("https://", '').replace(".myshopify.com","").replace("/","");
  
     const createdAtMin = dateFrom.toISOString();
     const createdAtMax = dateTo.toISOString();
     
-    let allOrders: any[] = [];
-    let pageInfo: string | null = null;
-    let hasNextPage = true;
+    const allOrders: any[] = [];
+    const pageInfo: string | null = null;
+    const hasNextPage = true;
 
     console.log(`Fetching Shopify orders from ${dateFrom} to ${dateTo}`,this.config,storeUrl);
         const ordernumlist=await orderApi.getAllOrderNum() || []
@@ -578,14 +578,14 @@ class ShopifyConnector {
         return false;
       }
       
-      let storeUrl = this.config.credentials.storeUrl.replace(/\/$/, '');
+      let storeUrl = String(this.config.credentials.storeUrl ?? '').replace(/\/$/, '');
       if (!storeUrl.startsWith('http://') && !storeUrl.startsWith('https://')) {
         storeUrl = 'https://' + storeUrl;
       }
       
       const response = await fetch(`${storeUrl}/admin/api/2024-01/shop.json`, {
         headers: {
-          'X-Shopify-Access-Token': this.config.credentials.accessToken
+          'X-Shopify-Access-Token': String(this.config.credentials.accessToken ?? '')
         }
       });
       
@@ -690,7 +690,7 @@ mapWooStatus(status){
       throw new Error('WooCommerce credentials are not configured properly');
     }
 
-    let response = await fetch(`${API_BASE_URL}/integrations/syncwoocomerce`, {
+    const response = await fetch(`${API_BASE_URL}/integrations/syncwoocomerce`, {
           method:"POST",
           headers: {
             'Content-Type': 'application/json'
@@ -705,8 +705,8 @@ mapWooStatus(status){
         const data = await response.json();
         const ordernumlist=await orderApi.getAllOrderNum() || []
 
-    let tmpstore=[]
-for(let y of data?.data || []){
+    const tmpstore=[]
+for(const y of data?.data || []){
 
 
     const converted = convertWooCommerceOrderToModel(y,null,getuserid());
@@ -774,13 +774,13 @@ class PlatformConnectorFactory {
   static createConnector(config: IntegrationConfig): PlatformConnector {
     switch (config.type) {
       case 'Amazon':
-        return new AmazonConnector(config);
+        return new AmazonConnector(config) as unknown as PlatformConnector;
       case 'Shopify':
-        return new ShopifyConnector(config);
+        return new ShopifyConnector(config) as unknown as PlatformConnector;
       case 'WooCommerce':
-        return new WooCommerceConnector(config);
+        return new WooCommerceConnector(config) as unknown as PlatformConnector;
       case 'Custom':
-        return new CustomConnector(config);
+        return new CustomConnector(config) as unknown as PlatformConnector;
       default:
         throw new Error(`Unsupported platform: ${config.type}`);
     }
@@ -926,7 +926,7 @@ export class SyncManager {
       }
       
       // Transform and save orders to our system
-      let syncedCount = 0;
+      const syncedCount = 0;
       const errors: string[] = [];
 
       for (const platformOrder of platformOrders) {
@@ -936,7 +936,7 @@ export class SyncManager {
           if (platform === 'Shopify' && connector instanceof ShopifyConnector) {
             transformedOrder = (connector as any).transformOrder(platformOrder);
           } else {
-            transformedOrder = connector.transformOrder(platformOrder, platform);
+            transformedOrder = (connector as any).transformOrder(platformOrder, platform);
           }
           
           // Check if order already exists

@@ -1,9 +1,9 @@
 export const getuserid=()=>(JSON.parse(localStorage.getItem('user'))?.id|| "")
 export const getuser=()=>(JSON.parse(localStorage.getItem('user'))|| null)
-export let storetmpdata={
+export const storetmpdata={
     ordernumber:[]
 }
-export let metroPincodeList = [
+export const metroPincodeList = [
   // Delhi NCR
   "110001","110002","110003","110004","110005","110006","110007","110008",
   "110009","110010","110011","110012","110013","110014","110015","110016",
