@@ -5,4 +5,4 @@ export interface IIntegrationService {
   testConnection(): Promise<boolean>;
 }
 
-export { Platform, type Order, type IntegrationConfig, type SyncResult } from "@/types/order";
+export type { Platform, Order, IntegrationConfig, SyncResult } from "@/types/order";

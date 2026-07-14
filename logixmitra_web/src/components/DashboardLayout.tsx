@@ -268,8 +268,8 @@ const ProfileDialog = ({
 const DashboardLayout = ({ children, title, subtitle, hidePageHeader }: DashboardLayoutProps) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  let [tmpm,settmpm]=useState<NavSection[]>(defaultNavSections)
-  let [wallet,setwallet]=useState(0)
+  const [tmpm,settmpm]=useState<NavSection[]>(defaultNavSections)
+  const [wallet,setwallet]=useState(0)
   const [profileOpen, setProfileOpen] = useState(false)
   const userwallet=async ()=>{
     try {

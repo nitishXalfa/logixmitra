@@ -344,7 +344,7 @@ const WarehousePage = () => {
   const totalOrders = warehouses.reduce((a, w) => a + w.ordersProcessed, 0);
 
   const getWarehouses = async () => {
-    let response = await apiRequest("GET", "auth/getAllWarehouses", {}, {});
+    const response = await apiRequest("GET", "auth/getAllWarehouses", {}, {});
     const userWarehouses = response.data.data.filter((val) => val.user_id == getuserid());
     setWarehouses([...userWarehouses]);
     
@@ -367,7 +367,7 @@ const WarehousePage = () => {
     if (!warehouseToSet) return;
 
     // Update all warehouses to have isDefault = false
-    for (let w of warehouses) {
+    for (const w of warehouses) {
       if (w.id !== id) {
         w.isDefault = false;
         await handleUpdate2(w);
@@ -398,7 +398,7 @@ const WarehousePage = () => {
     };
     newWarehouse.user_id = getuserid();
     
-    let response = await apiRequest("POST", "auth/createWarehouse", newWarehouse, {});
+    const response = await apiRequest("POST", "auth/createWarehouse", newWarehouse, {});
     
     if (response?.data?.success) {
       await getWarehouses(); // Refresh the list
@@ -411,14 +411,14 @@ const WarehousePage = () => {
   };
 
   const handleUpdate2 = async (updateddata) => {
-    let response = await apiRequest("PUT", "auth/updateWarehouse/" + updateddata.id, updateddata, {});
+    const response = await apiRequest("PUT", "auth/updateWarehouse/" + updateddata.id, updateddata, {});
     return response;
   };
 
   const handleUpdate = async () => {
     if (!editWarehouse) return;
     
-    let response = await apiRequest("PUT", "auth/updateWarehouse/" + editWarehouse.id, formData, {});
+    const response = await apiRequest("PUT", "auth/updateWarehouse/" + editWarehouse.id, formData, {});
     
     if (response?.data?.success) {
       await getWarehouses(); // Refresh the list
@@ -462,7 +462,7 @@ const WarehousePage = () => {
       return;
     }
     
-    let response = await apiRequest("DELETE", "auth/deleteWarehouse/" + id, {}, {});
+    const response = await apiRequest("DELETE", "auth/deleteWarehouse/" + id, {}, {});
     
     if (response?.data?.success) {
       await getWarehouses(); // Refresh the list
@@ -540,7 +540,7 @@ const WarehousePage = () => {
         <Label>Pincode</Label>
         <Input defaultValue={formData.pincode} onBlur={async (e) => {
           let checkstat = false;
-          for (let x of pincodelist.Sheet1) {
+          for (const x of pincodelist.Sheet1) {
             if (x.Pincode.includes(e.target.value)) {
               checkstat = true;
               setFormData(f => ({ ...f, pincode: e.target.value, city: x.City, state: x.State }));
@@ -548,7 +548,7 @@ const WarehousePage = () => {
           }
 
           if (!checkstat) {
-            let response = await getPincodeDetails(e.target.value);
+            const response = await getPincodeDetails(e.target.value);
             setFormData(f => ({ ...f, pincode: e.target.value, city: response.City, state: response.State }));
           }
           

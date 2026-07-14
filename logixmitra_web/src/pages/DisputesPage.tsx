@@ -112,8 +112,8 @@ const fetchorder=async()=>{
         const data = await orderApi.getAll();
         const data2=await sellerApi.getAll()
       storetmpdata.ordernumber=[]
-      let tmpdata=[]
-       for(let x of data){
+      const tmpdata=[]
+       for(const x of data){
   
         if(x.dispute_status!="" && x.dispute_status!=null){
            tmpdata.push(x)
@@ -127,8 +127,8 @@ const fetchorder=async()=>{
   
   
         setOrders(tmpdata);
-        let temp={}
-        for(let x of data2){
+        const temp={}
+        for(const x of data2){
           temp[x.id]=x
         }
         setallsellerlistid(temp)
@@ -140,6 +140,7 @@ const fetchorder=async()=>{
           variant: "destructive",
         });
       } finally {
+        // no-op
       }
 
 }
@@ -150,17 +151,17 @@ fetchorder()
 },[])
 
 const uploaddcoument=async(e)=>{
-  let formdata=new FormData()
+  const formdata=new FormData()
   formdata.append("file",e.target.files[0])
 
-let response=await fetch(`${UPLOAD_BASE_URL}/upload`,{
+const uploadRes = await fetch(`${UPLOAD_BASE_URL}/upload`,{
   method:"POST",
   body:formdata
 })
-response=await response.json()
+const uploadData = await uploadRes.json() as { filename?: string; fileInfo?: { filename?: string } }
 e.target.value=""
 
-setproof(response?.filename || response?.fileInfo?.filename || "")
+setproof(uploadData?.filename || uploadData?.fileInfo?.filename || "")
 
 
 }
@@ -173,7 +174,7 @@ const approreject=async(tmpod,statuss)=>{
   return 
  }
 
-  let payload={
+  const payload={
     dispute_status:statuss,
     dispute_file:proof || "",
     dispute_file_:tmpod?.dispute_file_ || "",
@@ -183,7 +184,7 @@ const approreject=async(tmpod,statuss)=>{
     dispute_reason:"",
   }
 
-  let response =await apiRequest("POST","orders/dispute_order",payload,{})
+  const response =await apiRequest("POST","orders/dispute_order",payload,{})
 fetchorder()
 
 setCreateOpenx(false)
@@ -239,9 +240,9 @@ setCreateOpenx(false)
                      
                     <td className="py-3 px-4 text-sm font-medium text-foreground"  style={{cursor:"pointer"}}>{d.dispute_file_!=""?<span onClick={async()=>{
                        setCreateOpen(true)
-                            let response=await fetch("${UPLOAD_BASE_URL}/preview/"+d.dispute_file_)
-                            response=await response.text()
-                            document.getElementById("fileopen").innerHTML=response
+                            const previewRes = await fetch(`${UPLOAD_BASE_URL}/preview/`+d.dispute_file_)
+                            const previewHtml = await previewRes.text()
+                            document.getElementById("fileopen").innerHTML = previewHtml
 
                     }}>View</span>:""}</td>
 
@@ -256,9 +257,9 @@ setCreateOpenx(false)
                         {d.dispute_file!="" && (
                           <Button size="sm" variant="ghost" onClick={async() => {
                             setCreateOpen(true)
-                            let response=await fetch("${UPLOAD_BASE_URL}/preview/"+d.dispute_file)
-                            response=await response.text()
-                            document.getElementById("fileopen").innerHTML=response
+                            const previewRes = await fetch(`${UPLOAD_BASE_URL}/preview/`+d.dispute_file)
+                            const previewHtml = await previewRes.text()
+                            document.getElementById("fileopen").innerHTML = previewHtml
                           }}>View</Button>
                         )}
                         {(d.dispute_status == "Disputed") &&(

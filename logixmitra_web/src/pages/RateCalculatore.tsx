@@ -116,7 +116,7 @@
 // const RateCalculatorForm = () => {
 //   const { toast } = useToast();
 //   const [ratelist, setRatelist] = useState([]);
-//   let [alldata, setalldata] = useState({
+//   const [alldata, setalldata] = useState({
 //     type: [],
 //     rate: [],
 //     data: [],
@@ -1576,14 +1576,14 @@ const emptySeller: CreateSellerDTO = {
 const RateCalculatorForm = () => {
   const { toast } = useToast();
   const [ratelist, setRatelist] = useState([]);
-  let [alldata, setalldata] = useState({
+  const [alldata, setalldata] = useState({
     type: [],
     rate: [],
     data: [],
     codcharge: []
   });
-  let [zone_, setzone_] = useState("");
-  let [corslab, setcorslab] = useState({});
+  const [zone_, setzone_] = useState("");
+  const [corslab, setcorslab] = useState({});
   const [formData, setFormData] = useState({
     shipmentType: "FORWARD",
     packageType: "SPS",
@@ -1709,13 +1709,13 @@ const RateCalculatorForm = () => {
       return;
     }
 
-    let pincodefrom = formData.originPincode;
-    let pincodeto = formData.deliveryPincode;
+    const pincodefrom = formData.originPincode;
+    const pincodeto = formData.deliveryPincode;
 
-    let pin1 = {};
-    let pin2 = {};
+    let pin1: { City?: string; State?: string; District?: string } = {};
+    let pin2: { City?: string; State?: string; District?: string } = {};
 
-    for (let x of pincodelist.Sheet1) {
+    for (const x of pincodelist.Sheet1) {
       if (x.Pincode.includes(pincodefrom)) pin1 = x;
       if (x.Pincode.includes(pincodeto)) pin2 = x;
     }
@@ -1724,19 +1724,19 @@ const RateCalculatorForm = () => {
     if (!pin2.City) pin2 = await getPincodeDetails(pincodeto);
 
     let zone = "";
-    let response1 = { 
+    const response1 = { 
       city: pin1?.City.toLowerCase() == "gautam buddha nagar" ? "noida" : pin1?.State == "Delhi" ? "delhi" : pin1?.City.toLowerCase(),
       district: pin1?.District.toLowerCase() == "gautam buddha nagar" ? "noida" : pin1?.District.toLowerCase(),
       state: pin1?.State.toLowerCase(),
     };
 
-    let response2 = {
+    const response2 = {
       city: pin2?.City.toLowerCase() == "gautam buddha nagar" ? "noida" : pin2?.State == "Delhi" ? "delhi" : pin2?.City.toLowerCase(),
       district: pin2?.District.toLowerCase() == "gautam buddha nagar" ? "noida" : pin2?.District.toLowerCase(),
       state: pin2?.State.toLowerCase(),
     };
 
-    let response3 = await fetch("${UPLOAD_BASE_URL}/read-excel", {
+    const zoneRes = await fetch(`${UPLOAD_BASE_URL}/read-excel`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -1744,7 +1744,7 @@ const RateCalculatorForm = () => {
       },
       body: JSON.stringify({ pin1: response1, pin2: response2 })
     });
-    response3 = await response3.json();
+    const response3 = await zoneRes.json() as { data?: string };
     zone = response3?.data;
 
     if (!response3.data || response3.data == "Zone not found") {
@@ -1762,18 +1762,16 @@ const RateCalculatorForm = () => {
     }
     setzone_(zone);
 
-    let wieght = chargeableWeight;
+    const wieght = chargeableWeight;
 
-    let couriertype = {};
-    alldata = {
-      type: [],
-      rate: [],
-      data: [],
-      codcharge: []
-    };
+    const couriertype = {};
+    alldata.type = [];
+    alldata.rate = [];
+    alldata.data = [];
+    alldata.codcharge = [];
 
-    let rawData_ = rawData.slice(2);
-    let alltype = [];
+    const rawData_ = rawData.slice(2);
+    const alltype = [];
 
     for (let i = 0; i < rawData_.length; i++) {
       if (rawData_[i][0] != null) {
@@ -1792,7 +1790,7 @@ const RateCalculatorForm = () => {
       let ind = -1;
 
       for (let j = 0; j < rawData_.length; j++) {
-        let tmax = Number(rawData_[j][1].replaceAll(" ", "").replace("Per", "").replace("kg", "").replace("additional", "") || 0);
+        const tmax = Number(rawData_[j][1].replaceAll(" ", "").replace("Per", "").replace("kg", "").replace("additional", "") || 0);
         if (tmax > max && rawData_[j][0] == alltype[i] && (tmax <= wieght || (tmax <= wieght || (tmax == .5 && wieght <= .5)))) {
           ind = j;
           max = tmax;
@@ -1805,13 +1803,13 @@ const RateCalculatorForm = () => {
         alldata.data.push(rawData_[ind]);
         corslab[alltype[i]] = max;
 
-        let tamt1 = Number(rawData_[ind].at(-1).replaceAll(" ", "").split("|")[0]);
-        let per1 = parseFloat(rawData_[ind].at(-1).replaceAll(" ", "").split("|")[1]);
-        let tamt2 = Number(formData.invoiceValue) / 100 * per1;
+        const tamt1 = Number(rawData_[ind].at(-1).replaceAll(" ", "").split("|")[0]);
+        const per1 = parseFloat(rawData_[ind].at(-1).replaceAll(" ", "").split("|")[1]);
+        const tamt2 = Number(formData.invoiceValue) / 100 * per1;
         alldata.codcharge.push(formData.paymentMode == "COD" ? (tamt1 > tamt2 ? tamt1 : tamt2) : 0);
       } else {
-        let amount1 = Number(rawData_[ind][rawData[0].indexOf(zone)]);
-        let amount2 = Number(rawData_[ind + 1][rawData[0].indexOf(zone)]);
+        const amount1 = Number(rawData_[ind][rawData[0].indexOf(zone)]);
+        const amount2 = Number(rawData_[ind + 1][rawData[0].indexOf(zone)]);
         let totalrate = amount1 + amount2;
         max += Number(rawData_[ind + 1][1].replaceAll(" ", "").replace("Per", "").replace("kg", "").replace("additional", "") || 0);
 
@@ -1822,15 +1820,15 @@ const RateCalculatorForm = () => {
             alldata.data.push(rawData_[ind]);
             corslab[alltype[i]] = max;
 
-            let tamt1 = Number(rawData_[ind + 1].at(-1).replaceAll(" ", "").split("|")[0]);
-            let per1 = parseFloat(rawData_[ind + 1].at(-1).replaceAll(" ", "").split("|")[1]);
-            let tamt2 = Number(formData.invoiceValue) / 100 * per1;
+            const tamt1 = Number(rawData_[ind + 1].at(-1).replaceAll(" ", "").split("|")[0]);
+            const per1 = parseFloat(rawData_[ind + 1].at(-1).replaceAll(" ", "").split("|")[1]);
+            const tamt2 = Number(formData.invoiceValue) / 100 * per1;
             alldata.codcharge.push(formData.paymentMode == "COD" ? (tamt1 > tamt2 ? tamt1 : tamt2) : 0);
             break;
           }
           max += Number(rawData_[ind + 1][1].replaceAll(" ", "").replace("Per", "").replace("kg", "").replace("additional", "") || 0);
           totalrate += amount2;
-        } while (1);
+        } while (true); // eslint-disable-line no-constant-condition
       }
     }
 
@@ -2154,11 +2152,11 @@ const RateChart = () => {
   }, [seller]);
 
   const setuserratechart = async (data) => {
-    let payload = {
+    const payload = {
       user_id: seller,
       data: data
     };
-    let response = await fetch("${API_BASE_URL}/integrations/ratechartset", {
+    const response = await fetch("${API_BASE_URL}/integrations/ratechartset", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -2193,9 +2191,7 @@ const RateChart = () => {
 
           {getuser()?.role == "admin" && <>
             <div style={{ width: "300px" }} className=" flex justify-end ml-auto ">
-              <Select value={seller} onValueChange={v => setseller(v)}
-                variant="outline" size="sm" className="ml-auto  "
-              >
+              <Select value={seller} onValueChange={v => setseller(v)}>
                 <SelectTrigger id="seller">
                   <SelectValue placeholder="Select seller" />
                 </SelectTrigger>
@@ -2207,16 +2203,16 @@ const RateChart = () => {
               </Select>
             </div>
 
-            <Button htmlFor="inputratesheet" variant="outline" size="sm" className="ml btn-primary "
+            <Button variant="outline" size="sm" className="ml btn-primary "
               onClick={() => {
-                let inputratesheet = document.getElementById("inputratesheet") as HTMLInputElement;
+                const inputratesheet = document.getElementById("inputratesheet") as HTMLInputElement;
                 inputratesheet.click();
               }}
             >
               Rate Sheet Upload
             </Button>
 
-            <Button htmlFor="inputratesheet" variant="outline" size="sm" className="ml btn-primary "
+            <Button variant="outline" size="sm" className="ml btn-primary "
               onClick={() => {
                 downloadExcel();
               }}
@@ -2332,12 +2328,12 @@ const PinCodeChart = () => {
   }, [effectiveDate, serviceType]);
 
   const setuserratechart = async (dataArray) => {
-    let payload = {
+    const payload = {
       courier_name: serviceType,
       data: dataArray,
       pincodedate: effectiveDate
     };
-    let response = await fetch("${API_BASE_URL}/integrations/pincodechartset", {
+    const response = await fetch("${API_BASE_URL}/integrations/pincodechartset", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
@@ -2423,7 +2419,7 @@ const PinCodeChart = () => {
                   size="sm"
                   className="btn-primary"
                   onClick={() => {
-                    let inputratesheet = document.getElementById("inputratesheet") as HTMLInputElement;
+                    const inputratesheet = document.getElementById("inputratesheet") as HTMLInputElement;
                     inputratesheet.click();
                   }}
                 >

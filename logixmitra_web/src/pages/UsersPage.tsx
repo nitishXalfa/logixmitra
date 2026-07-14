@@ -1617,7 +1617,7 @@ const UsersPage = () => {
   };
 
   const getRoleBadgeColor = (roleName: string = '') => {
-    switch (roleName?.name?.toLowerCase()) {
+    switch (roleName?.toLowerCase()) {
       case 'admin':
         return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
       case 'manager':

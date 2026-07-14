@@ -32,7 +32,7 @@ const PermissionsPage = () => {
   const [matrix, setMatrix] = useState([]);
   const [allModules, setAllModules] = useState([]);
   const [isEditing, setIsEditing] = useState(false);
-  const [editPerms, setEditPerms] = useState({});
+  const [editPerms, setEditPerms] = useState<Record<string, string[]>>({});
   const [saving, setSaving] = useState(false);
   const [authError, setAuthError] = useState(false);
 

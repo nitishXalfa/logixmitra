@@ -6549,7 +6549,7 @@ const FinancePage = () => {
       let worksheetData;
       
       if (type === "COD History") {
-        worksheetData = dataToExport.map((item: CODHistoryItem) => ({
+        worksheetData = (dataToExport as CODHistoryItem[]).map((item: CODHistoryItem) => ({
           "Order ID": item.orderId,
           "Order Date": item.orderDate,
           "Seller": item.seller || "-",
@@ -6563,7 +6563,7 @@ const FinancePage = () => {
           "Status": item.status.toUpperCase()
         }));
       } else {
-        worksheetData = dataToExport.map((item: WalletHistoryItem) => ({
+        worksheetData = (dataToExport as WalletHistoryItem[]).map((item: WalletHistoryItem) => ({
           "Transaction ID": item.transactionId,
           "Order Number": item.orderNumber || "-",
           "Type": item.type.toUpperCase(),
@@ -6619,7 +6619,7 @@ const FinancePage = () => {
       
       if (type === "COD History") {
         headers = ["Order ID", "Order Date", "Seller", "Courier", "AWB Number", "Invoice Amount", "COD Amount", "Delivered Date", "Delivered Time", "Remittance Due Date", "Status"];
-        rows = dataToExport.map((item: CODHistoryItem) => [
+        rows = (dataToExport as CODHistoryItem[]).map((item: CODHistoryItem) => [
           item.orderId,
           item.orderDate,
           item.seller || "-",
@@ -6634,7 +6634,7 @@ const FinancePage = () => {
         ]);
       } else {
         headers = ["Transaction ID", "Order Number", "Type", "Amount", "Balance", "Description", "Date", "Status"];
-        rows = dataToExport.map((item: WalletHistoryItem) => [
+        rows = (dataToExport as WalletHistoryItem[]).map((item: WalletHistoryItem) => [
           item.transactionId,
           item.orderNumber || "-",
           item.type,
@@ -6694,7 +6694,7 @@ const FinancePage = () => {
         { method: "GET", headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` } }
       ).then(res => res.json());
 
-      let ordersResult = await orderApi.getAll({ paginate: "false" });
+      const ordersResult = await orderApi.getAll({ paginate: "false" });
       let ordersData = ordersResult.orders || ordersResult;
       
       if (!Array.isArray(ordersData)) {
@@ -6704,7 +6704,7 @@ const FinancePage = () => {
       try {
         const sellerData = await sellerApi.getAll();
         sellerMap = {};
-        for (let x of sellerData) {
+        for (const x of sellerData) {
           sellerMap[x.id] = x;
         }
       } catch (error) {
@@ -6950,8 +6950,8 @@ const FinancePage = () => {
           {activeTab === "wallet" ? (
             <>
               <StatCard title="Wallet Balance" value={formatAmount(walletHistory[0]?.balance ?? summary.totalGenerated)} icon={<IndianRupee className="h-5 w-5" />} variant="accent" />
-              <StatCard title="Total Credit" value={formatAmount(walletHistory.filter(w => w.amount > 0).reduce((s, w) => s + w.amount, 0))} icon={<ArrowUpRight className="h-5 w-5" />} variant="success" />
-              <StatCard title="Total Debit" value={formatAmount(Math.abs(walletHistory.filter(w => w.amount < 0).reduce((s, w) => s + w.amount, 0)))} icon={<ArrowDownRight className="h-5 w-5" />} variant="warning" />
+              <StatCard title="Total Credit" value={formatAmount(walletHistory.filter(w => parseFloat(String(w.amount).replace('₹', '').replace(/,/g, '')) > 0).reduce((s, w) => s + parseFloat(String(w.amount).replace('₹', '').replace(/,/g, '')), 0))} icon={<ArrowUpRight className="h-5 w-5" />} variant="success" />
+              <StatCard title="Total Debit" value={formatAmount(Math.abs(walletHistory.filter(w => parseFloat(String(w.amount).replace('₹', '').replace(/,/g, '')) < 0).reduce((s, w) => s + parseFloat(String(w.amount).replace('₹', '').replace(/,/g, '')), 0)))} icon={<ArrowDownRight className="h-5 w-5" />} variant="warning" />
             </>
           ) : (
             <>

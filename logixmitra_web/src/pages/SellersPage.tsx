@@ -684,7 +684,9 @@ const SellersPage = () => {
                       </td>
                     </tr>
                   ) : (
-                    sellers.map(seller => (
+                    sellers.map(seller => {
+                      const sellerStatus: SellerStatus = seller.status;
+                      return (
                       <tr key={seller.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
                         <td className="py-3 px-4">
                           <p className="text-sm font-medium text-foreground">{seller.name}</p>
@@ -761,7 +763,7 @@ const SellersPage = () => {
                               <Wallet className="h-3.5 w-3.5 text-green-600" />
                             </Button> */}
                             
-                            {seller.status === "pending" ? (
+                            {sellerStatus === "pending" ? (
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
@@ -772,19 +774,14 @@ const SellersPage = () => {
                                 <CheckCircle className="h-3.5 w-3.5" />
                               </Button>
                             ) : (
-                             seller.status !="active" && <Button 
+                             sellerStatus !== "active" && <Button 
                                 variant="ghost" 
                                 size="icon" 
                                 className="h-8 w-8" 
                                 onClick={() => handleStatusToggle(seller.id)}
-                                title={seller.status === "active" ? "Block Seller" : "Activate Seller"}
+                                title="Activate Seller"
                               >
-                                {seller.status === "active" ? 
-                                  // <XCircle className="h-3.5 w-3.5 text-red-600" />
-                                  ""
-                                   : 
-                                  <CheckCircle className="h-3.5 w-3.5 text-green-600" />
-                                }
+                                <CheckCircle className="h-3.5 w-3.5 text-green-600" />
                               </Button>
                             )}
                             
@@ -800,7 +797,8 @@ const SellersPage = () => {
                           </div>
                         </td>
                       </tr>
-                    ))
+                    );
+                    })
                   )}
                 </tbody>
               </table>

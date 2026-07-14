@@ -31,6 +31,7 @@ class Role(models.Model):
 
     class Meta:
         db_table = "roles"
+        ordering = ["id"]
 
     def __str__(self):
         return self.name
@@ -55,6 +56,7 @@ class Permission(models.Model):
     class Meta:
         db_table = "permissions"
         unique_together = ("module", "action")
+        ordering = ["module", "action", "id"]
 
     def __str__(self):
         return f"{self.module}:{self.action}"
