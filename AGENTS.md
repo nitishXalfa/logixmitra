@@ -19,6 +19,7 @@ LogixMitra is a two-service app: a Django REST API (`logixmitra_backend`) and a 
 - Seeded login: `admin@logixmitra.com` / `admin123`. Re-seed after a DB reset with `python manage.py seed_data`.
 - `manage.py migrate` warns that `accounts` has model changes not in a migration; this is a pre-existing repo state and does not block running the app (the committed SQLite DB is already in sync). Do not run `makemigrations` unless intentionally changing models.
 - An in-process APScheduler tracking cron starts automatically with the backend; it no-ops without courier API credentials (`EKART_*`, `SMC_*`, `DELHIVERY_TOKEN`).
+- Creating an order (Orders → "+ Add Order") requires explicitly opening the Warehouse dropdown and picking an option — the displayed default is not stored, so submitting without an explicit selection sends a null warehouse and the API 500s (`NOT NULL constraint failed: orders.warehouse`). Seed at least one warehouse first.
 
 ### Lint / test
 - Frontend lint: `npm run lint` (ESLint; currently 0 errors, warnings only).
