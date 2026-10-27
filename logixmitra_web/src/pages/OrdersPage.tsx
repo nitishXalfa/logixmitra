@@ -1,9 +1,9 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import OrderWorkspaceToolbar from "@/components/orders/OrderWorkspaceToolbar";
 import OrderFilterBar from "@/components/orders/OrderFilterBar";
 import OrdersRichTable from "@/components/orders/OrdersRichTable";
-import { computeStatusCounts } from "@/utils/orderStatusCounts";
+import { mergeStatusCounts } from "@/utils/orderStatusCounts";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1935,7 +1935,7 @@ const [refSearch, setRefSearch] = useState("");
 const [awbSearch, setAwbSearch] = useState("");
 const [showMoreFilters, setShowMoreFilters] = useState(false);
 const [dateType, setDateType] = useState("Order Created");
-const [countOrders, setCountOrders] = useState<Order[]>([]);
+const [statusCounts, setStatusCounts] = useState<Record<string, number>>({ all: 0 });
 
 const [formErrors, setFormErrors] = useState<any>({});
   const [warehouselist,setwarehouselist]=useState([])
@@ -2097,19 +2097,18 @@ catch(e){
     try {
       setLoading(true);
       const result = await orderApi.getAll({
-        // page,
-        // limit,
-        // search: awbSearch || refSearch || search || undefined,
-        // status: statusFilter !== 'all' ? statusFilter : undefined,
-        // platform: platformFilter !== 'all' ? platformFilter : undefined,
-        // startDate: dateFrom || undefined,
-        // endDate: dateTo || undefined,
-        // courier: courier__ !== 'all' ? courier__ : undefined,
-        // financialStatus: paymentmood !== 'all' ? paymentmood : undefined,
+        page,
+        limit,
+        paginate: "true",
+        search: awbSearch || refSearch || search || undefined,
+        status: statusFilter !== "all" ? statusFilter : undefined,
+        platform: platformFilter !== "all" ? platformFilter : undefined,
+        startDate: dateFrom || undefined,
+        endDate: dateTo || undefined,
+        courier: courier__ !== "all" ? courier__ : undefined,
+        financialStatus: paymentmood !== "all" ? paymentmood : undefined,
       });
 
-
-      console.log(result,"resultresultresultresultresultresultresultresultresultresultresultresult")
       const data = result.orders || result;
       const pagination = result.pagination;
       const data2 = await sellerApi.getAll();
@@ -2118,16 +2117,23 @@ catch(e){
         storetmpdata.ordernumber.push(x.orderNumber);
       }
 
-
-
-
-      setOrders(data);
+      setOrders(Array.isArray(data) ? data : []);
       if (pagination) {
+        // Filtered list total — must match the selected status chip count
         setTotalOrdersCount(pagination.total);
-        setServerTotalPages(pagination.totalPages);
+        setServerTotalPages(pagination.totalPages || Math.ceil(pagination.total / limit) || 1);
       } else {
         setTotalOrdersCount(data.length);
         setServerTotalPages(Math.ceil(data.length / limit) || 1);
+      }
+      // Keep chip counts in sync with the list (same backend filters).
+      // Active status chip is forced to pagination.total so count never drifts from the table.
+      if (result.statusCounts) {
+        const nextCounts = mergeStatusCounts(result.statusCounts);
+        if (statusFilter !== "all" && pagination) {
+          nextCounts[statusFilter] = pagination.total;
+        }
+        setStatusCounts(nextCounts);
       }
       const temp = {};
       for (const x of data2 || []) {
@@ -2136,9 +2142,7 @@ catch(e){
       setallsellerlistid(temp);
       setallsellerlist(data2 || []);
     } catch (error) {
-
-
-      console.log(error,"errorerrorerrorerrorerrorerrorerrorerrorerrorerrorerrorerror")
+      console.log(error, "error fetching orders");
       toast({
         title: "Error",
         description: "Failed to fetch orders",
@@ -2174,7 +2178,6 @@ const [serverTotalPages, setServerTotalPages] = useState(1);
 
 const totalPages = serverTotalPages || Math.ceil(totalOrdersCount / itemsPerPage) || 1;
 const startIndex = (currentPage - 1) * itemsPerPage;
-const endIndex = startIndex + itemsPerPage;
 
 
 const [rtocharge,setrtocharge]=useState([])
@@ -2192,21 +2195,6 @@ useEffect(() => {
 useEffect(() => {
   fetchOrders(currentPage, itemsPerPage);
 }, [currentPage, itemsPerPage, search, statusFilter, platformFilter, dateFrom, dateTo, courier__, paymentmood, refSearch, awbSearch]);
-
-useEffect(() => {
-  const loadCounts = async () => {
-    try {
-      const result = await orderApi.getAll({ paginate: "false" });
-      const data = result?.orders ?? (Array.isArray(result) ? result : []);
-      setCountOrders(Array.isArray(data) ? data : []);
-    } catch {
-      setCountOrders([]);
-    }
-  };
-  loadCounts();
-}, []);
-
-  const statusCounts = useMemo(() => computeStatusCounts(countOrders), [countOrders]);
 
   const stats = {
     total: orders.length,
@@ -8199,7 +8187,9 @@ const TrackingModal = ({ open, onOpenChange, trackingData }) => {
                 />
               <div className="flex items-center justify-between px-4 py-3 border-t">
   <div className="text-sm text-muted-foreground">
-    Showing {startIndex + 1} to {Math.min(endIndex, totalOrdersCount || paginatedOrders.length)} of {totalOrdersCount || paginatedOrders.length} orders
+    {totalOrdersCount === 0
+      ? "Showing 0 orders"
+      : `Showing ${startIndex + 1} to ${startIndex + paginatedOrders.length} of ${totalOrdersCount} orders`}
   </div>
   <div className="flex items-center gap-2">
     <Button
