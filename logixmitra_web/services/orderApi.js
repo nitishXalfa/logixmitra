@@ -1253,6 +1253,12 @@ export const orderApi = {
   getAll: async (filters = {}) => {
     filters.user_id = getuserid();
     filters.paginate = filters.paginate ?? 'true';
+    // Drop empty / undefined filter values so the API does not get "undefined" strings
+    Object.keys(filters).forEach((key) => {
+      if (filters[key] === undefined || filters[key] === null || filters[key] === '') {
+        delete filters[key];
+      }
+    });
     const params = new URLSearchParams(filters || {}).toString();
     const isAdmin = getuser()?.role === 'admin';
     const url = isAdmin ? `/orders?${params}` : `/orders?${params}`;
@@ -1262,9 +1268,14 @@ export const orderApi = {
       return {
         orders: payload.data || [],
         pagination: payload.pagination,
+        statusCounts: payload.statusCounts || null,
       };
     }
-    return { orders: Array.isArray(payload) ? payload : payload?.data || [], pagination: null };
+    return {
+      orders: Array.isArray(payload) ? payload : payload?.data || [],
+      pagination: null,
+      statusCounts: payload?.statusCounts || null,
+    };
   },
 
   getAllOrderNum: async (filters = {}) => {
@@ -1361,8 +1372,15 @@ export const orderApi = {
   },
 
   // Get order statistics
-  getStats: async () => {
-    const response = await api.get('/orders/stats');
+  getStats: async (filters = {}) => {
+    filters.user_id = getuserid();
+    Object.keys(filters).forEach((key) => {
+      if (filters[key] === undefined || filters[key] === null || filters[key] === '') {
+        delete filters[key];
+      }
+    });
+    const params = new URLSearchParams(filters || {}).toString();
+    const response = await api.get(`/orders/stats?${params}`);
     return response.data;
   },
 

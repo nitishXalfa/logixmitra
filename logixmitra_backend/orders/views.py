@@ -12,6 +12,7 @@ from rest_framework.views import APIView
 from config.utils import parse_user_id
 from orders.models import Order, OrderItem, Shipment, Warehouse, generate_reference_id
 from orders.serializers import OrderSerializer, WarehouseSerializer
+from orders.status_utils import apply_status_filter, compute_status_chip_counts
 
 
 class OrderPagination(PageNumberPagination):
@@ -19,8 +20,8 @@ class OrderPagination(PageNumberPagination):
     page_size_query_param = "limit"
     max_page_size = 100
 
-    def get_paginated_response(self, data):
-        return Response({
+    def get_paginated_response(self, data, status_counts=None):
+        payload = {
             "success": True,
             "data": data,
             "pagination": {
@@ -29,7 +30,10 @@ class OrderPagination(PageNumberPagination):
                 "total": self.page.paginator.count,
                 "totalPages": self.page.paginator.num_pages,
             },
-        })
+        }
+        if status_counts is not None:
+            payload["statusCounts"] = status_counts
+        return Response(payload)
 
 
 def parse_amount(value):
@@ -99,8 +103,6 @@ class OrderListCreateView(APIView):
 
         if user_id is not None and user_id != 1:
             qs = qs.filter(user_id=user_id)
-        if status_filter:
-            qs = qs.filter(status__iexact=status_filter)
         if platform:
             qs = qs.filter(platform=platform)
         if courier:
@@ -120,16 +122,30 @@ class OrderListCreateView(APIView):
         if end_date:
             qs = qs.filter(order_date__lte=end_date)
 
+        # Counts use the same non-status filters so chip totals match the list
+        # when a status chip is selected (selected chip count == pagination.total).
+        status_counts = compute_status_chip_counts(qs)
+        qs = apply_status_filter(qs, status_filter)
         qs = qs.order_by("-created_at")
 
         if paginate:
             paginator = OrderPagination()
             page = paginator.paginate_queryset(qs, request)
             serializer = OrderSerializer(page, many=True)
-            return paginator.get_paginated_response(serializer.data)
+            return paginator.get_paginated_response(serializer.data, status_counts=status_counts)
 
         serializer = OrderSerializer(qs, many=True)
-        return Response(serializer.data)
+        return Response({
+            "success": True,
+            "data": serializer.data,
+            "statusCounts": status_counts,
+            "pagination": {
+                "page": 1,
+                "limit": qs.count(),
+                "total": qs.count(),
+                "totalPages": 1,
+            },
+        })
 
     def post(self, request):
         payload = request.data
@@ -243,7 +259,12 @@ class OrderStatsView(APIView):
         if user_id is not None and user_id != 1:
             qs = qs.filter(user_id=user_id)
         stats = qs.values("status").annotate(count=Count("id"))
-        return Response({"success": True, "data": list(stats)})
+        status_counts = compute_status_chip_counts(qs)
+        return Response({
+            "success": True,
+            "data": list(stats),
+            "statusCounts": status_counts,
+        })
 
 
 class UserOrdersWithShipmentView(APIView):
